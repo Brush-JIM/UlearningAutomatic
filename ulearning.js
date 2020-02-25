@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.4.2
+// @version      1.4.3
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
@@ -13,7 +13,7 @@
 (function () {
     'use strict';
     /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.4.2由EliotZhang、Brush-JIM @ 2020/02/25 最后更新
+     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.4.3由EliotZhang、Brush-JIM @ 2020/02/25 最后更新
      *  特别感谢Brush-JIM (Mail:Brush-JIM@protonmail.com) 提供的脚本改进支持！
      *  使用修改播放速率功能请谨慎！！！产生的不良后果恕某概不承担！！！
      *  请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失
@@ -37,9 +37,17 @@
     var EnableAutoChangeRate = true;
 
     // 新增函数 By Brush-JIM
-    function Video() {
+    function Video(func = {}, slept = false) {
         if (autoAnswer) {
-            setTimeout(Video, "1000");
+            setTimeout(function () {
+                Video({}, true);
+            }, '1000');
+            return;
+        }
+        if (!slept) {
+            setTimeout(function () {
+                Video({}, true);
+            }, '1000');
             return;
         }
         var A_tmp = $('video');
@@ -136,7 +144,7 @@
         nextPageBtn.each((k, n) => {
             n.click();
         });
-        setTimeout(Video, "1000");
+        setTimeout(Video, "500");
     }
 
     function CheckModal() {
