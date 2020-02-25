@@ -1,5 +1,5 @@
 # UlearningAutomatic
-<strong>优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.4.1由EliotZhang、Brush-JIM @ 2020/02/25 最后更新</strong><br/>
+<strong><h1 color=red>优学院自动静音播放、自动做练习题、自动翻页、修改播放速率</h1></strong><br/>
 <strong>特别感谢Brush-JIM (Mail: Brush-JIM@protonmail.com) 提供的脚本改进支持！</strong><br/>
 <strong>使用修改播放速率功能请谨慎！！！产生的不良后果恕本人概不承担！！！</strong><br/>
 <strong>请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失</strong><br/>
