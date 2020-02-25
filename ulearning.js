@@ -5,8 +5,8 @@
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
-// @updateURL    https://eliotzhang.club/JS/ulearning.js
-// @downloadURL  https://eliotzhang.club/JS/ulearning.js
+// @updateURL    https://raw.githubusercontent.com/ZhangEliot/UlearningAutomatic/master/ulearning.js
+// @downloadURL  https://raw.githubusercontent.com/ZhangEliot/UlearningAutomatic/master/ulearning.js
 // @grant        none
 // ==/UserScript==
 
