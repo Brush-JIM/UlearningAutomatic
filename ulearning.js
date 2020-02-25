@@ -28,7 +28,7 @@
      */
 
     // 自动修改的倍率
-    var N = 15.0;
+    var N = 1.50;
     // 将下面AutoFillAnswer赋值为false可以禁用自动作答功能！
     var EnableAutoFillAnswer = true;
     // 将下面EnableAutoMuted赋值为false可以禁用自动静音功能！
