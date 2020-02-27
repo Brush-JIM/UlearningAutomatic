@@ -1,43 +1,42 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.4.3
+// @version      1.4.6
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
-// @updateURL    https://raw.githubusercontent.com/ZhangEliot/UlearningAutomatic/master/ulearning.js
-// @downloadURL  https://raw.githubusercontent.com/ZhangEliot/UlearningAutomatic/master/ulearning.js
 // @grant        none
 // ==/UserScript==
 
 (function () {
     'use strict';
     /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.4.3由EliotZhang、Brush-JIM @ 2020/02/25 最后更新
+     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.4.6由EliotZhang @ 2020/02/27 最后更新
      *  特别感谢Brush-JIM (Mail:Brush-JIM@protonmail.com) 提供的脚本改进支持！
      *  使用修改播放速率功能请谨慎！！！产生的不良后果恕某概不承担！！！
      *  请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失
-     *  如果您不需要自动静音功能，请将EnableAutoMute赋值为false
-     *  如果您不需要自动修改播放速率，请将EnableAutoChangeRate赋值为false
      *  如果你需要改变自动修改的播放速率，请更改本注释下第一行N的赋值(别改的太大，否则可能产生不良后果！！！默认是1.5倍速，这是正常的！！！最大为15.0，否则可能失效！！！)
-     *  自动作答功能由于精力有限目前只支持单/多项选择、判断题、部分填空问答题，如果出现问题请尝试禁用这个功能：将EnableAutoFillAnswer赋值为false
+     *  自动作答功能由于精力有限目前只支持单/多项选择、判断题、部分填空问答题，如果出现问题请尝试禁用这个功能!
      *  如果脚本无效请优先尝试刷新页面，若是无效请查看脚本最后的解决方案，如果还是不行请反馈给本人，本人将会尽快修复
      *  如果是因为网络问题，本人也无能为力
      *  如果在使用中还有什么问题请通过邮箱联系EliotZhang：moriartylimitter@outlook.com
      *  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      */
 
-    // 自动修改的倍率
     var N = 1.50;
-    // 将下面AutoFillAnswer赋值为false可以禁用自动作答功能！
-    var EnableAutoFillAnswer = true;
-    // 将下面EnableAutoMuted赋值为false可以禁用自动静音功能！
+    var EnableAutoPlay = true;
     var EnableAutoMute = true;
-    // 将下面EnableAutoChangeRate赋值为false可以禁用自动修改速率功能！
     var EnableAutoChangeRate = true;
+    var EnableAutoFillAnswer = true;
+    var EnableAutoShowAnswer = true;
+    var EnableAutoAnswerChoices = true;
+    var EnableAutoAnswerJudges = true;
+    var EnableAutoAnswerFills = true;
 
     // 新增函数 By Brush-JIM
     function Video(func = {}, slept = false) {
+        if (!EnableAutoPlay)
+            return;
         if (autoAnswer) {
             setTimeout(function () {
                 Video({}, true);
@@ -47,7 +46,7 @@
         if (!slept) {
             setTimeout(function () {
                 Video({}, true);
-            }, '1000');
+            }, '3000');
             return;
         }
         var A_tmp = $('video');
@@ -136,7 +135,7 @@
     }
 
     function GotoNextPage() {
-        if (autoAnswer)
+        if (autoAnswer || !EnableAutoPlay)
             return;
         var nextPageBtn = $('.mobile-next-page-btn, .next-page-btn next-page-btn cursor');
         if (nextPageBtn.length === 0)
@@ -144,12 +143,21 @@
         nextPageBtn.each((k, n) => {
             n.click();
         });
-        setTimeout(Video, "500");
+        setTimeout(Video, "1000");
     }
 
-    function CheckModal() {
-        if (autoAnswer)
+    function CheckModal(slept = false) {
+        if (autoAnswer || !EnableAutoFillAnswer)
             return;
+        if (!slept) {
+            setTimeout(function () {
+                CheckModal(true);
+            }, '2000');
+            return;
+        }
+        if (EnableAutoPlay) {
+            CheckModal();
+        }
         var continueBtn = $('.btn-submit');
         if (continueBtn.length > 0)
             continueBtn.each((k, v) => {
@@ -195,8 +203,25 @@
         return arr;
     }
 
+    function Escape2Html(str) {
+        var arrEntities = {
+            'lt': '<',
+            'gt': '>',
+            'nbsp': ' ',
+            'amp': '&',
+            'quot': '"'
+        };
+        return str.replace(/&(lt|gt|nbsp|amp|quot);/ig, function (all, t) {
+            return arrEntities[t];
+        });
+    }
+
+    function DelHtmlTag(str) {
+        return str.replace(/(<[^>]+>|[\\n\\r])/g, " ");
+    }
+
     function FillAnswers() {
-        if (!autoAnswer)
+        if (!autoAnswer || !EnableAutoAnswerFills)
             return;
         var ansarr = [];
         var idList = [];
@@ -226,10 +251,10 @@
 
         $(re).each((k1, v1) => {
             if (v1.length == 1) {
-                ansarr.push(v1[0]);
+                ansarr.push(DelHtmlTag(Escape2Html(v1[0])));
             } else {
                 $(v1).each(function (k2, v2) {
-                    ansarr.push(v2);
+                    ansarr.push(DelHtmlTag(Escape2Html(v2)));
                 });
             }
         });
@@ -241,7 +266,7 @@
     }
 
     function ShowAndFillAnswer() {
-        if (autoAnswer)
+        if (autoAnswer | !EnableAutoFillAnswer)
             return;
         autoAnswer = true;
         var sqList = [];
@@ -266,12 +291,16 @@
                 }
             });
         });
-        var t = qw.find('.question-title-html');
-        t.each(function (k, v) {
-            var ans = an.shift();
-            $(v).after('<span style="color:red;">答案：' + ans + '</span>');
-            an.push(ans);
-        });
+        //
+        if (EnableAutoShowAnswer) {
+            var t = qw.find('.question-title-html');
+            t.each(function (k, v) {
+                var ans = an.shift();
+                $(v).after('<span style="color:red;">答案：' + ans + '</span>');
+                an.push(ans);
+            });
+        }
+        //
         var checkBox = qw.find('.checkbox');
         var choiceBox = qw.find('.choice-btn');
         var checkList = [];
@@ -302,15 +331,15 @@
             if (a.length <= 0) {
                 return;
             }
-            if (a[0].match(/[A-Z]/) && a[0].length == 1) {
+            if (a[0].match(/[A-Z]/) && a[0].length == 1 && EnableAutoAnswerChoices) {
                 var cb = checkList.shift();
                 a.forEach(aa => {
                     $(cb[aa.charCodeAt() - 65]).click();
                 });
-            } else if (a[0].match(/(true|false)/)) {
+            } else if (a[0].match(/(([tT][rR][uU][eE])|([fF][aA][lL][sS][eE]))/) && EnableAutoAnswerJudges) {
                 var ccb = choiceList.shift();
                 a.forEach(aa => {
-                    if (aa == 'true')
+                    if (aa.match(/([tT][rR][uU][eE])/))
                         ccb[0].click();
                     else
                         ccb[1].click();
@@ -319,31 +348,126 @@
             return;
 
         });
-        FillAnswers();
-        $('.btn-submit').click();
-        var A_tmp = $('video');
-        var A = [];
-        for (let d = 0; d < A_tmp.length; d++) {
-            if (A_tmp[d].src != "") {
-                A.push(A_tmp[d]);
+        if (EnableAutoAnswerFills)
+            FillAnswers();
+        if (EnableAutoPlay) {
+            $('.btn-submit').click();
+            var A_tmp = $('video');
+            var A = [];
+            for (let d = 0; d < A_tmp.length; d++) {
+                if (A_tmp[d].src != "") {
+                    A.push(A_tmp[d]);
+                }
             }
-        }
-        if (A.length === 0) {
-            autoAnswer = false;
-            GotoNextPage();
-            return;
+            if (A.length === 0) {
+                autoAnswer = false;
+                GotoNextPage();
+                return;
+            }
         }
         autoAnswer = false;
     }
 
+    function LoadStyle(url) {
+        var link = document.createElement('link');
+        link.type = 'text/css';
+        link.rel = 'stylesheet';
+        link.href = url;
+        var head = document.getElementsByTagName('head')[0];
+        head.appendChild(link);
+    }
+
+    function DrawOptionPanel() {
+        LoadStyle('https://eliotzhang.club/CSS/ulearning.css');
+        var root = document.getElementsByTagName('body')[0];
+        var panel = document.createElement('div');
+        root.appendChild(panel);
+        panel.setAttribute('class', 'OptionPanel');
+        panel.innerHTML = "<div class='MainPanel'><h2 class='OptionMainTitle'>优学院辅助脚本</br>by EliotZhang、BrushJIM</h2><button id='MainBtn'>收起设置</button><div id='Options'><strong><p class='OptionMainSep'>---------------------------------------------------</p></strong><h4>视频播放</h4><ul class='OptionUL'><li>自动翻页、播放视频、修改速率?<input class='OptionInput'id='AutoPlay'type='checkbox'checked='checked'></li><li>自动静音?<input class='OptionInput'id='AutoMute'type='checkbox'checked='checked'></li><li>自动调整速率?<input class='OptionInput'id='AutoPlayRate'type='checkbox'checked='checked'></li><li>自动的速率速度<input class='OptionInput'id='AutoPlayRateChange'type='number'value='1.50'step='0.25'min='0.25'max='15.00'></li></ul><h4>自动作答</h4><ul class='OptionUL'><li>自动作答(总开关)?<input class='OptionInput'id='AutoAnswer'type='checkbox'checked='checked'></li><li>自动显示答案?<input class='OptionInput'id='AutoShowAnswer'type='checkbox'checked='checked'></li><li>自动作答选择题?<input class='OptionInput'id='AutoAnswerChoices'type='checkbox'checked='checked'></li><li>自动作答判断题?<input class='OptionInput'id='AutoAnswerJudges'type='checkbox'checked='checked'></li><li>自动作答填空、简答题?<input class='OptionInput'id='AutoAnswerFills'type='checkbox'checked='checked'></li></ul><button id='SaveOpBtn'>保存设置并刷新脚本</button><p style='color:hotpink;'>若<strong>关闭自动翻页功能</strong>导致<strong>自动作答系列功能失效</strong>请点击<strong>保存设置并刷新脚本按钮！</strong></p><p style='color:hotpink;'>若关闭自动翻页功能答完题后请<strong>手动提交！！</strong></p></div></div>";
+        panel.style.zIndex = '9999';
+    }
+
+    function Init() {
+        mainBtn = document.getElementById('MainBtn');
+        saveOpBtn = document.getElementById('SaveOpBtn');
+        nextPageBtn = $('.mobile-next-page-btn, .next-page-btn next-page-btn cursor');
+        OptionOp = document.getElementById('Options');
+        autoPlayOp = document.getElementById('AutoPlay');
+        autoMuteOp = document.getElementById('AutoMute');
+        autoPlayRateOp = document.getElementById('AutoPlayRate');
+        autoPlayRateChangeOp = document.getElementById('AutoPlayRateChange');
+        autoAnswerOp = document.getElementById('AutoAnswer');
+        autoShowAnswerOp = document.getElementById('AutoShowAnswer');
+        autoAnswerChoicesOp = document.getElementById('AutoAnswerChoices');
+        autoAnswerJudgesOp = document.getElementById('AutoAnswerJudges');
+        autoAnswerFillsOp = document.getElementById('AutoAnswerFills');
+        mainBtn.addEventListener('click', function () {
+            var isHidden = OptionOp.hidden;
+            if (isHidden)
+                mainBtn.innerHTML = '收起设置';
+            else
+                mainBtn.innerHTML = '展开设置';
+            OptionOp.hidden = !isHidden;
+        }, true);
+        autoPlayRateChangeOp.addEventListener('change', function () {
+            let val = autoPlayRateChangeOp.value;
+            if (val > 15.0)
+                autoPlayRateChangeOp.value = 15;
+            else if (val < 0.25)
+                autoPlayRateChangeOp.value = 0.25;
+        }, true);
+        autoPlayOp.addEventListener('change', function () {
+            if (autoPlayOp.checked === false)
+                autoMuteOp.checked = autoPlayRateOp.checked = false;
+            else
+                autoMuteOp.checked = autoPlayRateOp.checked = true;
+        });
+        autoAnswerOp.addEventListener('change', function () {
+            if (autoAnswerOp.checked === false)
+                autoAnswerChoicesOp.checked = autoAnswerJudgesOp.checked = autoAnswerFillsOp.checked = autoShowAnswerOp.checked = false;
+            else
+                autoAnswerChoicesOp.checked = autoAnswerJudgesOp.checked = autoAnswerFillsOp.checked = autoShowAnswerOp.checked = true;
+        });
+        saveOpBtn.addEventListener('click', function () {
+            EnableAutoMute = autoMuteOp.checked;
+            EnableAutoChangeRate = autoPlayRateOp.checked;
+            EnableAutoPlay = autoPlayOp.checked;
+            EnableAutoShowAnswer = autoShowAnswerOp.checked;
+            EnableAutoAnswerChoices = autoAnswerChoicesOp.checked;
+            EnableAutoAnswerJudges = autoAnswerJudgesOp.checked;
+            EnableAutoAnswerFills = autoAnswerFillsOp.checked;
+            if (!EnableAutoShowAnswer && !EnableAutoAnswerChoices && !EnableAutoAnswerJudges && !EnableAutoAnswerFills)
+                autoAnswerOp.checked = false;
+            EnableAutoFillAnswer = autoAnswerOp.checked;
+            N = autoPlayRateChangeOp.value;
+            Video({}, true);
+            CheckModal(true);
+        }, true);
+    }
+
     function Main() {
         Video();
-        setInterval(CheckModal, "1000");
+        Init();
+        CheckModal();
     }
 
     var autoAnswer = false;
+    var mainBtn;
+    var saveOpBtn;
+    var OptionOp;
+    var autoPlayOp;
+    var autoMuteOp;
+    var autoPlayRateOp;
+    var autoPlayRateChangeOp;
+    var autoAnswerOp;
+    var autoShowAnswerOp;
+    var autoAnswerChoicesOp;
+    var autoAnswerJudgesOp;
+    var autoAnswerFillsOp;
+    var nextPageBtn;
 
     // 如果脚本无效则有可能是网络问题，请尝试修改下面的3000为更大数值，或者换个网络负荷小的时候重试！
-    setTimeout(Main, "5000");
+    setTimeout(Main, "3000");
+    DrawOptionPanel();
 
 })();
