@@ -1,0 +1,41 @@
+.OptionPanel {
+    position: absolute;
+    top: -10px;
+    right: 60px;
+    width: 370px;
+}
+
+.MainPanel {
+    background-color: aquamarine;
+    border-radius: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.OptionMainTitle {
+    text-align: center;
+}
+
+.OptionMainSep {
+    text-align: center;
+    line-height: 5px;
+}
+
+#MainBtn,
+#SaveOpBtn {
+    width: 360px;
+    height: 30px;
+    background-color: rgba(0, 0, 0, 0);
+    color: hotpink;
+    font-size: 20px;
+}
+
+.OptionUL li {
+    position: relative;
+    list-style: none;
+}
+
+.OptionInput {
+    position: absolute;
+    right: 25px;
+}
