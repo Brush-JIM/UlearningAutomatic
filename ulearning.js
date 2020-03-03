@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.4.8
+// @version      1.4.9
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
@@ -12,7 +12,7 @@
 (function () {
     'use strict';
     /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.4.8由EliotZhang @ 2020/03/03 最后更新
+     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.4.9由EliotZhang @ 2020/03/03 最后更新
      *  特别感谢Brush-JIM (Mail:Brush-JIM@protonmail.com) 提供的脚本改进支持！
      *  使用修改播放速率功能请谨慎！！！产生的不良后果恕某概不承担！！！
      *  请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失
@@ -452,9 +452,32 @@
                 autoAnswerOp.checked = false;
             EnableAutoFillAnswer = autoAnswerOp.checked;
             N = autoPlayRateChangeOp.value;
+            // Save
+            window.localStorage.EZUL = 'EliotZhang、BrushJIM';
+            window.localStorage.EAM = EnableAutoMute ? 't' : 'f';
+            window.localStorage.EACR = EnableAutoChangeRate ? 't' : 'f';
+            window.localStorage.EAP = EnableAutoPlay ? 't' : 'f';
+            window.localStorage.EASA = EnableAutoShowAnswer ? 't' : 'f';
+            window.localStorage.EAAC = EnableAutoAnswerChoices ? 't' : 'f';
+            window.localStorage.EAAJ = EnableAutoAnswerJudges ? 't' : 'f';
+            window.localStorage.EAAF = EnableAutoAnswerFills ? 't' : 'f';
+            window.localStorage.EAFA = EnableAutoFillAnswer ? 't' : 'f';
+            window.localStorage.APRC = autoPlayRateChangeOp.value.toString();
             Video({}, true);
             CheckModal(true);
         }, true);
+        // Load
+        if (window.localStorage.getItem('EZUL') === 'EliotZhang、BrushJIM') {
+            autoMuteOp.checked = EnableAutoMute = window.localStorage.EAM == 't';
+            autoPlayRateOp.checked = EnableAutoChangeRate = window.localStorage.EACR == 't';
+            autoPlayOp.checked = EnableAutoPlay = window.localStorage.EAP == 't';
+            autoShowAnswerOp.checked = EnableAutoShowAnswer = window.localStorage.EASA == 't';
+            autoAnswerChoicesOp.checked = EnableAutoAnswerChoices = window.localStorage.EAAC == 't';
+            autoAnswerJudgesOp.checked = EnableAutoAnswerJudges = window.localStorage.EAAJ == 't';
+            autoAnswerFillsOp.checked = EnableAutoAnswerFills = window.localStorage.EAAF == 't';
+            autoAnswerOp.checked = EnableAutoFillAnswer = window.localStorage.EAFA == 't';
+            autoPlayRateChangeOp.value = N = parseFloat(window.localStorage.APRC);
+        }
     }
 
     function Main() {
