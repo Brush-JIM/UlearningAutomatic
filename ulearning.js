@@ -1,17 +1,18 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.4.6
+// @version      1.4.7
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
+// @require      https://code.jquery.com/ui/1.12.1/jquery-ui.js
 // @grant        none
 // ==/UserScript==
 
 (function () {
     'use strict';
     /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.4.6由EliotZhang @ 2020/02/27 最后更新
+     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.4.7由EliotZhang @ 2020/03/03 最后更新
      *  特别感谢Brush-JIM (Mail:Brush-JIM@protonmail.com) 提供的脚本改进支持！
      *  使用修改播放速率功能请谨慎！！！产生的不良后果恕某概不承担！！！
      *  请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失
@@ -217,7 +218,7 @@
     }
 
     function DelHtmlTag(str) {
-        return str.replace(/(<[^>]+>|[\\n\\r])/g, " ");
+        return str.replace(/(<[^>]+>|\\n|\\r)/g, " ");
     }
 
     function FillAnswers() {
@@ -383,15 +384,15 @@
         var panel = document.createElement('div');
         root.appendChild(panel);
         panel.setAttribute('class', 'OptionPanel');
-        panel.innerHTML = "<div class='MainPanel'><h2 class='OptionMainTitle'>优学院辅助脚本</br>by EliotZhang、BrushJIM</h2><button id='MainBtn'>收起设置</button><div id='Options'><strong><p class='OptionMainSep'>---------------------------------------------------</p></strong><h4>视频播放</h4><ul class='OptionUL'><li>自动翻页、播放视频、修改速率?<input class='OptionInput'id='AutoPlay'type='checkbox'checked='checked'></li><li>自动静音?<input class='OptionInput'id='AutoMute'type='checkbox'checked='checked'></li><li>自动调整速率?<input class='OptionInput'id='AutoPlayRate'type='checkbox'checked='checked'></li><li>自动的速率速度<input class='OptionInput'id='AutoPlayRateChange'type='number'value='1.50'step='0.25'min='0.25'max='15.00'></li></ul><h4>自动作答</h4><ul class='OptionUL'><li>自动作答(总开关)?<input class='OptionInput'id='AutoAnswer'type='checkbox'checked='checked'></li><li>自动显示答案?<input class='OptionInput'id='AutoShowAnswer'type='checkbox'checked='checked'></li><li>自动作答选择题?<input class='OptionInput'id='AutoAnswerChoices'type='checkbox'checked='checked'></li><li>自动作答判断题?<input class='OptionInput'id='AutoAnswerJudges'type='checkbox'checked='checked'></li><li>自动作答填空、简答题?<input class='OptionInput'id='AutoAnswerFills'type='checkbox'checked='checked'></li></ul><button id='SaveOpBtn'>保存设置并刷新脚本</button><p style='color:hotpink;'>若<strong>关闭自动翻页功能</strong>导致<strong>自动作答系列功能失效</strong>请点击<strong>保存设置并刷新脚本按钮！</strong></p><p style='color:hotpink;'>若关闭自动翻页功能答完题后请<strong>手动提交！！</strong></p></div></div>";
-        panel.style.zIndex = '9999';
+        panel.innerHTML = "<div class='OptionPanel'><div class='DragBall'>UL</div><div class='MainPanel'><h2 class='OptionMainTitle'>优学院辅助脚本</br>by EliotZhang、BrushJIM</h2><button id='MainBtn'>隐藏设置</button><h4>视频播放</h4><ul class='OptionUL'><li>自动翻页、播放视频?<input class='OptionInput'id='AutoPlay'type='checkbox'checked='checked'></li><li>自动静音?<input class='OptionInput'id='AutoMute'type='checkbox'checked='checked'></li><li>自动调整速率(依赖自动播放视频功能)?<input class='OptionInput'id='AutoPlayRate'type='checkbox'checked='checked'></li><li>自动的速率速度<input class='OptionInput'id='AutoPlayRateChange'type='number'value='1.50'step='0.25'min='0.25'max='15.00'></li></ul><h4>自动作答</h4><ul class='OptionUL'><li>自动作答(总开关)?<input class='OptionInput'id='AutoAnswer'type='checkbox'checked='checked'></li><li>自动显示答案?<input class='OptionInput'id='AutoShowAnswer'type='checkbox'checked='checked'></li><li>自动作答选择题?<input class='OptionInput'id='AutoAnswerChoices'type='checkbox'checked='checked'></li><li>自动作答判断题?<input class='OptionInput'id='AutoAnswerJudges'type='checkbox'checked='checked'></li><li>自动作答填空、简答题?<input class='OptionInput'id='AutoAnswerFills'type='checkbox'checked='checked'></li></ul><button id='SaveOpBtn'>保存设置并刷新脚本</button><p style='color:hotpink;'>若<strong>关闭自动翻页功能</strong>导致<strong>自动作答系列功能失效</strong>请点击<strong>保存设置并刷新脚本按钮！</strong></p><p style='color:hotpink;'>若关闭自动翻页功能答完题后请<strong>手动提交！！</strong></p></div></div>";
     }
 
     function Init() {
         mainBtn = document.getElementById('MainBtn');
+        dragBall = $('.DragBall');
         saveOpBtn = document.getElementById('SaveOpBtn');
-        nextPageBtn = $('.mobile-next-page-btn, .next-page-btn next-page-btn cursor');
-        OptionOp = document.getElementById('Options');
+        OptionPanel = $('.OptionPanel');
+        MainPanel = $('.MainPanel');
         autoPlayOp = document.getElementById('AutoPlay');
         autoMuteOp = document.getElementById('AutoMute');
         autoPlayRateOp = document.getElementById('AutoPlayRate');
@@ -401,14 +402,25 @@
         autoAnswerChoicesOp = document.getElementById('AutoAnswerChoices');
         autoAnswerJudgesOp = document.getElementById('AutoAnswerJudges');
         autoAnswerFillsOp = document.getElementById('AutoAnswerFills');
+        dragBall.draggable({
+            containment: ".page-scroller ps ps--theme_default",
+            start: function (event, ui) {
+                $(this).addClass('noclick');
+            }
+        });
+        dragBall.hide();
         mainBtn.addEventListener('click', function () {
-            var isHidden = OptionOp.hidden;
-            if (isHidden)
-                mainBtn.innerHTML = '收起设置';
-            else
-                mainBtn.innerHTML = '展开设置';
-            OptionOp.hidden = !isHidden;
+            MainPanel.hide();
+            dragBall.show();
         }, true);
+        dragBall.click(function (e) {
+            if ($(this).hasClass('noclick')) {
+                $(this).removeClass('noclick');
+            } else if (e.target == e.currentTarget) {
+                MainPanel.show();
+                $(this).hide();
+            }
+        });
         autoPlayRateChangeOp.addEventListener('change', function () {
             let val = autoPlayRateChangeOp.value;
             if (val > 15.0)
@@ -453,8 +465,10 @@
 
     var autoAnswer = false;
     var mainBtn;
+    var dragBall;
     var saveOpBtn;
-    var OptionOp;
+    var OptionPanel;
+    var MainPanel;
     var autoPlayOp;
     var autoMuteOp;
     var autoPlayRateOp;
@@ -464,7 +478,6 @@
     var autoAnswerChoicesOp;
     var autoAnswerJudgesOp;
     var autoAnswerFillsOp;
-    var nextPageBtn;
 
     // 如果脚本无效则有可能是网络问题，请尝试修改下面的3000为更大数值，或者换个网络负荷小的时候重试！
     setTimeout(Main, "3000");
