@@ -1,8 +1,32 @@
 .OptionPanel {
     position: absolute;
-    top: -10px;
-    right: 60px;
     width: 370px;
+    opacity: 60%;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+}
+
+.OptionPanel:hover {
+    opacity: 70%;
+}
+
+.DragBall {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    top: 10px;
+    right: 10px;
+    opacity: 60%;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 40px;
+    color: white;
+    background: aqua no-repeat fixed center;
+}
+
+.DragBall:hover {
+    opacity: 90%;
 }
 
 .MainPanel {
@@ -25,7 +49,7 @@
 #SaveOpBtn {
     width: 360px;
     height: 30px;
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.3);
     color: hotpink;
     font-size: 20px;
 }
