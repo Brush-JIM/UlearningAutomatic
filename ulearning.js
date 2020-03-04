@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.5.1
+// @version      1.5.2
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
@@ -12,7 +12,7 @@
 (function () {
     'use strict';
     /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.5.1由EliotZhang @ 2020/03/03 最后更新
+     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.5.2由EliotZhang @ 2020/03/04 最后更新
      *  特别感谢Brush-JIM (Mail:Brush-JIM@protonmail.com) 提供的脚本改进支持！
      *  使用修改播放速率功能请谨慎！！！产生的不良后果恕某概不承担！！！
      *  请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失
@@ -38,7 +38,7 @@
     function Video(func = {}, slept = false) {
         if (!EnableAutoPlay)
             return;
-        if (autoAnswer) {
+        if (autoAnswering) {
             setTimeout(function () {
                 Video({}, true);
             }, '1000');
@@ -136,9 +136,9 @@
     }
 
     function GotoNextPage() {
-        if (autoAnswer || !EnableAutoPlay)
+        if (autoAnswering || !EnableAutoPlay || checkingModal)
             return;
-        var nextPageBtn = $('.mobile-next-page-btn, .next-page-btn next-page-btn cursor');
+        var nextPageBtn = $('.mobile-next-page-btn');
         if (nextPageBtn.length === 0)
             return;
         nextPageBtn.each((k, n) => {
@@ -148,7 +148,7 @@
     }
 
     function CheckModal(slept = false) {
-        if (autoAnswer)
+        if (autoAnswering)
             return;
         if (!slept) {
             setTimeout(function () {
@@ -159,27 +159,13 @@
         if (EnableAutoPlay) {
             CheckModal();
         }
+        checkingModal = true;
         var qw = $('.question-wrapper');
         if (qw.length > 0 && EnableAutoFillAnswer) {
             ShowAndFillAnswer();
+            checkingModal = false;
             return;
         }
-        var alertModal = document.getElementById("alertModal");
-
-        if (alertModal === undefined)
-            return;
-        if (alertModal.className.match(/\sin/)) {
-            var op = $('.modal-operation').children()[EnableAutoFillAnswer ? 0 : 1];
-            op.click();
-            if (EnableAutoFillAnswer)
-                ShowAndFillAnswer();
-        }
-        var continueBtn = $('.btn-submit');
-        if (continueBtn.length > 0)
-            continueBtn.each((k, v) => {
-                if ($(v).text() != '提交')
-                    $(v).click();
-            });
         var statModal = $('#statModal');
         if (statModal.length > 0) {
             var ch = statModal[0];
@@ -187,6 +173,31 @@
             if (ch.length >= 2)
                 ch[1].click();
         }
+        var err = $('.mobile-video-error');
+        if (err && err.css('display') != 'none')
+            $('.try-again').click();
+        var alertModal = document.getElementById("alertModal");
+        if (alertModal === undefined) {
+            checkingModal = false;
+            return;
+        }
+        if (alertModal.className.match(/\sin/)) {
+            var op = $('.modal-operation').children();
+            if (op.length >= 2)
+                op[EnableAutoFillAnswer ? 0 : 1].click();
+            else {
+                var continueBtn = $('.btn-submit');
+                if (continueBtn.length > 0) {
+                    continueBtn.each((k, v) => {
+                        if ($(v).text() != '提交')
+                            $(v).click();
+                    });
+                }
+            }
+            if (EnableAutoFillAnswer)
+                ShowAndFillAnswer();
+        }
+        checkingModal = false;
     }
 
     function RemoveDuplicatedItem(arr) {
@@ -219,7 +230,7 @@
     }
 
     function FillAnswers() {
-        if (!autoAnswer || !EnableAutoAnswerFills)
+        if (!autoAnswering || !EnableAutoAnswerFills)
             return;
         var ansarr = [];
         var idList = [];
@@ -264,9 +275,9 @@
     }
 
     function ShowAndFillAnswer() {
-        if (autoAnswer | !EnableAutoFillAnswer)
+        if (autoAnswering | !EnableAutoFillAnswer)
             return;
-        autoAnswer = true;
+        autoAnswering = true;
         var sqList = [];
         var qw = $('.question-wrapper');
         var an = [];
@@ -275,7 +286,7 @@
             sqList.push(id.replace('question', ''));
         });
         if (sqList.length <= 0) {
-            autoAnswer = false;
+            autoAnswering = false;
             return;
         }
         $(sqList).each(function (k, id) {
@@ -358,12 +369,12 @@
                 }
             }
             if (A.length === 0) {
-                autoAnswer = false;
+                autoAnswering = false;
                 GotoNextPage();
                 return;
             }
         }
-        autoAnswer = false;
+        autoAnswering = false;
     }
 
     function LoadStyle(url) {
@@ -478,12 +489,13 @@
     }
 
     function Main() {
-        Video();
         Init();
+        Video();
         CheckModal();
     }
 
-    var autoAnswer = false;
+    var autoAnswering = false;
+    var checkingModal = false;
     var mainBtn;
     var dragBall;
     var saveOpBtn;
@@ -499,8 +511,9 @@
     var autoAnswerJudgesOp;
     var autoAnswerFillsOp;
 
-    // 如果脚本无效则有可能是网络问题，请尝试修改下面的3000为更大数值，或者换个网络负荷小的时候重试！
-    setTimeout(Main, "3000");
     DrawOptionPanel();
+    $(document).ready(function () {
+        Main();
+    });
 
 })();
