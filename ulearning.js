@@ -1,18 +1,19 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.5.2
+// @version      1.5.3
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
 // @require      https://code.jquery.com/ui/1.12.1/jquery-ui.js
+// @run-at       document-start
 // @grant        none
 // ==/UserScript==
 
 (function () {
     'use strict';
     /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.5.2由EliotZhang @ 2020/03/04 最后更新
+     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.5.3由EliotZhang @ 2020/03/31 最后更新
      *  特别感谢Brush-JIM (Mail:Brush-JIM@protonmail.com) 提供的脚本改进支持！
      *  使用修改播放速率功能请谨慎！！！产生的不良后果恕某概不承担！！！
      *  请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失
@@ -489,6 +490,7 @@
     }
 
     function Main() {
+        DrawOptionPanel();
         Init();
         Video();
         CheckModal();
@@ -511,9 +513,28 @@
     var autoAnswerJudgesOp;
     var autoAnswerFillsOp;
 
-    DrawOptionPanel();
-    $(document).ready(function () {
-        Main();
-    });
+    try {
+        document.__defineGetter__('hidden', function () {
+            return false
+        })
+    } catch (e) {
+        Object.defineProperty(document, 'hidden', {
+            get: function () {
+                return false
+            }
+        })
+    };
+    try {
+        document.__defineGetter__('visibilityState', function () {
+            return 'visible'
+        })
+    } catch (e) {
+        Object.defineProperty(document, 'visibilityState', {
+            get: function () {
+                return 'visible'
+            }
+        })
+    };
+    setTimeout(Main, '3000');
 
 })();
