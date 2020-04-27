@@ -1,6 +1,7 @@
 # UlearningAutomatic
 <strong><h1 color=red>优学院自动静音播放、自动做练习题、自动翻页、修改播放速率</h1></strong><br/>
 <strong>特别感谢Brush-JIM (Mail: Brush-JIM@protonmail.com) 提供的脚本改进支持！</strong><br/>
+<strong>本脚本不支持使用flash的教材课程，使用前请留意！</strong><br/>
 <strong>使用修改播放速率功能请谨慎！！！产生的不良后果恕本人概不承担！！！</strong><br/>
 <strong>需浏览器配合Tamper Monkey或类似拓展插件以使用此用户脚本</strong>
 <ul>
