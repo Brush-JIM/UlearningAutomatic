@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.5.4
+// @version      1.6.0
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
@@ -14,11 +14,10 @@
 (function () {
     'use strict';
     /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.5.4由Brush-JIM @ 2020/04/1 最后更新
+     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.6.0由EliotZhang @ 2020/04/27 最后更新
      *  特别感谢Brush-JIM (Mail:Brush-JIM@protonmail.com) 提供的脚本改进支持！
      *  使用修改播放速率功能请谨慎！！！产生的不良后果恕某概不承担！！！
      *  请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失
-     *  如果你需要改变自动修改的播放速率，请更改本注释下第一行N的赋值(别改的太大，否则可能产生不良后果！！！默认是1.5倍速，这是正常的！！！最大为15.0，否则可能失效！！！)
      *  自动作答功能由于精力有限目前只支持单/多项选择、判断题、部分填空问答题，如果出现问题请尝试禁用这个功能!
      *  如果脚本无效请优先尝试刷新页面，若是无效请查看脚本最后的解决方案，如果还是不行请反馈给本人，本人将会尽快修复
      *  如果是因为网络问题，本人也无能为力
@@ -250,11 +249,15 @@
         idList = RemoveDuplicatedItem(idList);
         $(idList).each((k, id) => {
             $.ajax({
-                async: false,
-                type: "get",
                 url: 'https://api.ulearning.cn/questionAnswer/' + id,
-                datatype: 'json',
-                success: function (result) {
+                type: "GET",
+                contentType: "application/json",
+                dataType: 'json',
+                async: false,
+                data: {
+                    parentId: pageid,
+                },
+                success: function (result, status, xhr) {
                     re.push(result.correctAnswerList);
                 }
             });
@@ -270,9 +273,7 @@
             }
         });
         $(txtAreas).each((k, v) => {
-            $(v).trigger('click');
-            v.value = ansarr.shift();
-            $(v).trigger('change');
+            $(v).val(ansarr.shift());
         });
     }
 
@@ -282,25 +283,49 @@
         autoAnswering = true;
         var sqList = [];
         var qw = $('.question-wrapper');
+        var pages = $('.page-item');
         var an = [];
         qw.each(function (k, v) {
             var id = $(v).attr('id');
             sqList.push(id.replace('question', ''));
         });
+        var flag = false;
+        pages.each(function (k, v) {
+            if (flag) return;
+            var sp = $(v).find('.page-name');
+            if (sp.length > 0 && sp[0].className.search('active') >= 0) {
+                var pd = $(v).attr('id');
+                pd = pd.slice(pd.search(/\d/g));
+                pageid = pd;
+                flag = true;
+            }
+        });
+        if (!flag) {
+            autoAnswering = false;
+            GotoNextPage();
+            return;
+        }
         if (sqList.length <= 0) {
             autoAnswering = false;
             return;
         }
         $(sqList).each(function (k, id) {
-            $.ajax({
-                async: false,
-                type: "get",
-                url: 'https://api.ulearning.cn/questionAnswer/' + id,
-                datatype: 'json',
-                success: function (result) {
-                    an.push(result.correctAnswerList);
-                }
-            });
+            var flag = false;
+            while (!flag)
+                $.ajax({
+                    url: 'https://api.ulearning.cn/questionAnswer/' + id,
+                    type: "GET",
+                    contentType: "application/json",
+                    dataType: 'json',
+                    async: false,
+                    data: {
+                        parentId: pageid,
+                    },
+                    success: function (result, status, xhr) {
+                        an.push(result.correctAnswerList);
+                        flag = true;
+                    }
+                });
         });
         //
         if (EnableAutoShowAnswer) {
@@ -339,13 +364,15 @@
             }
         });
         an.forEach(a => {
-            if (a.length <= 0) {
+            if (a==null || a==undefined || a.length <= 0) {
                 return;
             }
             if (a[0].match(/[A-Z]/) && a[0].length == 1 && EnableAutoAnswerChoices) {
                 var cb = checkList.shift();
                 a.forEach(aa => {
-                    $(cb[aa.charCodeAt() - 65]).click();
+                    var cccb = $(cb[aa.charCodeAt() - 65]);
+                    if (cccb[0] === undefined || (cccb[0] != undefined && cccb[0].className.search('selected') < 0))
+                        cccb.click();
                 });
             } else if (a[0].match(/(([tT][rR][uU][eE])|([fF][aA][lL][sS][eE]))/) && EnableAutoAnswerJudges) {
                 var ccb = choiceList.shift();
@@ -359,9 +386,12 @@
             return;
 
         });
-        if (EnableAutoAnswerFills)
+        if (EnableAutoAnswerFills) {
             FillAnswers();
+            $.globalEval("$('textarea, .blank-input').trigger('change')");
+        }
         if (EnableAutoPlay) {
+            $('textarea, .blank-input').trigger('change');
             $('.btn-submit').click();
             var A_tmp = $('video');
             var A = [];
@@ -513,6 +543,7 @@
     var autoAnswerChoicesOp;
     var autoAnswerJudgesOp;
     var autoAnswerFillsOp;
+    var pageid = '';
 
     try {
         unsafeWindow.document.__defineGetter__('hidden', function () {
