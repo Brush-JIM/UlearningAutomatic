@@ -535,7 +535,7 @@
     var OptionPanel;
     var MainPanel;
     var autoPlayOp;
-    var autoMuteOp;
+    var autoMuteOp; 
     var autoPlayRateOp;
     var autoPlayRateChangeOp;
     var autoAnswerOp;
