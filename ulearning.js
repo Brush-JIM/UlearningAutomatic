@@ -364,7 +364,7 @@
             }
         });
         an.forEach(a => {
-            if (a==null || a==undefined || a.length <= 0) {
+            if (a == null || a == undefined || a.length <= 0) {
                 return;
             }
             if (a[0].match(/[A-Z]/) && a[0].length == 1 && EnableAutoAnswerChoices) {
@@ -545,28 +545,8 @@
     var autoAnswerFillsOp;
     var pageid = '';
 
-    try {
-        unsafeWindow.document.__defineGetter__('hidden', function () {
-            return false
-        })
-    } catch (e) {
-        Object.defineProperty(unsafeWindow.document, 'hidden', {
-            get: function () {
-                return false
-            }
-        })
-    };
-    try {
-        unsafeWindow.document.__defineGetter__('visibilityState', function () {
-            return 'visible'
-        })
-    } catch (e) {
-        Object.defineProperty(unsafeWindow.document, 'visibilityState', {
-            get: function () {
-                return 'visible'
-            }
-        })
-    };
+    setInterval(function () { unsafeWindow.document.dispatchEvent(new Event('mousemove')) }, 1000);
+
     setTimeout(Main, '3000');
 
 })();
