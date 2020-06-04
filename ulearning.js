@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.6.0
+// @version      1.6.1
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
@@ -14,7 +14,7 @@
 (function () {
     'use strict';
     /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.6.0由EliotZhang @ 2020/04/27 最后更新
+     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.6.1由EliotZhang @ 2020/06/04 最后更新
      *  特别感谢Brush-JIM (Mail:Brush-JIM@protonmail.com) 提供的脚本改进支持！
      *  使用修改播放速率功能请谨慎！！！产生的不良后果恕某概不承担！！！
      *  请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失
