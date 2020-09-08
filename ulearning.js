@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.6.1
+// @version      1.6.2
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
@@ -35,105 +35,147 @@
     var EnableAutoAnswerJudges = true;
     var EnableAutoAnswerFills = true;
 
-    // 新增函数 By Brush-JIM
-    function Video(func = {}, slept = false) {
-        if (!EnableAutoPlay)
+    function Video(slept = false) {
+        if (!EnableAutoPlay) {
             return;
+        }
         if (autoAnswering) {
             setTimeout(function () {
-                Video({}, true);
+                Video(true);
             }, '1000');
             return;
         }
         if (!slept) {
             setTimeout(function () {
-                Video({}, true);
+                Video(true);
             }, '3000');
             return;
         }
-        var A_tmp = $('video');
-        var A = [];
-        for (let d = 0; d < A_tmp.length; d++) {
-            if (A_tmp[d].src != "") {
-                A.push(A_tmp[d]);
-            }
-        }
-        if (A.length === 0) {
+        var videos = $('video');
+        var videos_status = $('div[class="video-bottom"]');
+        if (videos.length === 0) {
             GotoNextPage();
             return;
         }
-        var B = [];
-        var tmp = $('div[class="video-bottom"]');
-        for (let b = 0; b < tmp.length; b++) {
-            let span = tmp[b].getElementsByTagName("span")[0];
-            if (span) {
-                let data_bind = span.getAttribute('data-bind');
-                if (data_bind == 'text: $root.i18nMessageText().finished' || data_bind == 'text: $root.i18nMessageText().viewed' || data_bind == 'text: $root.i18nMessageText().unviewed') {
-                    B.push(data_bind);
+        var v_s = [];
+        if (videos.length === videos_status.length) {
+            $(videos).each(function (index, value) {
+                let state = $('span', $('div[class="video-bottom"]')[index]).attr('data-bind');
+                if (state === 'text: $root.i18nMessageText().finished') {
+                    v_s.push({
+                        'ele': value,
+                        'status': true
+                    });
+                } else if (state === 'text: $root.i18nMessageText().viewed' || state === 'text: $root.i18nMessageText().unviewed') {
+                    v_s.push({
+                        'ele': value,
+                        'status': false
+                    });
+                } else {
+                    v_s.push({
+                        'ele': value,
+                        'status': null
+                    });
                 }
-            }
+            })
+        } else {
+            $(videos).each(function (index, value) {
+                v_s.push({
+                    'ele': value,
+                    'status': false
+                })
+            });
         }
+        $(v_s).each(function (index, value) {
+            value['ele'].addEventListener("ended", function () {
+                v_s[index]['status'] = true;
+            }, true);
+        })
+        timestamp = Date.parse(new Date());
+        Video_Ctrl(v_s, timestamp);
+    }
 
-        function video_ctrl(func) {
-            for (let c = 0; c < A.length; c++) {
-                if (B[c] == 'text: $root.i18nMessageText().viewed' || B[c] == 'text: $root.i18nMessageText().unviewed' || B[c] === false) {
-                    if (c - 1 >= 0) {
-                        if (A[c - 1].currentTime != 0) {
-                            if (A[c - 1].paused === true) {
-                                A[c - 1].play()
+    function Video_Ctrl(v_s, t_s) {
+        if (timestamp === t_s) {
+            for (let index in v_s) {
+                index = Number(index);
+                let value = v_s[index];
+                if (value['status'] === false) {
+                    if (index - 1 > 0) {
+                        if (v_s[index - 1]['ele'].currentTime !== 0) {
+                            if (v_s[index - 1]['ele'].paused === true) {
+                                let playPromise = v_s[index - 1]['ele'].play();
+                                if (playPromise !== undefined) {
+                                    playPromise.then(function () {
+                                        ;
+                                    }).catch(function (error) {
+                                        v_s[index - 1]['status'] = true;
+                                    })
+                                }
                             }
-                            if (EnableAutoMute && A[c - 1].muted === false) {
-                                A[c - 1].muted = true;
+                            if (EnableAutoMute && v_s[index - 1]['ele'].muted === false) {
+                                v_s[index - 1]['ele'].muted = true;
                             }
-                            if (EnableAutoChangeRate && A[c - 1].playbackRate != N) {
-                                A[c - 1].playbackRate = N
+                            if (EnableAutoChangeRate && v_s[index - 1]['ele'].playbackRate != N) {
+                                v_s[index - 1]['ele'].playbackRate = N;
                             }
-                            break;
                         }
-                    }
-                    if (A[c].paused === true) {
-                        A[c].play();
-                    }
-                    if (EnableAutoMute && A[c].muted === false) {
-                        A[c].muted = true;
-                    }
-                    if (EnableAutoChangeRate && A[c].playbackRate != N) {
-                        A[c].playbackRate = N;
+                        break;
+                    } else {
+                        if (value['ele'].paused === true) {
+                            let playPromise = value['ele'].play();
+                            if (playPromise !== undefined) {
+                                playPromise.then(function () {
+                                    ;
+                                }).catch(function (error) {
+                                    v_s[index]['status'] = true;
+                                })
+                            }
+                        }
+                        if (EnableAutoMute && value['ele'].muted === false) {
+                            value['ele'].muted = true;
+                        }
+                        if (EnableAutoChangeRate && value['ele'].playbackRate != N) {
+                            value['ele'].playbackRate = N;
+                        }
                     }
                     break;
                 }
             }
-            if (B[B.length - 1] == 'text: $root.i18nMessageText().finished' || B[B.length - 1] === true) {
-                if (A[A.length - 1].currentTime != 0) {
-                    if (A[A.length - 1].paused === true) {
-                        A[A.length - 1].play()
-                    }
-                    if (EnableAutoMute && A[A.length - 1].muted === false) {
-                        A[A.length - 1].muted = true
-                    }
-                    if (EnableAutoChangeRate && A[A.length - 1].playbackRate != N) {
-                        A[A.length - 1].playbackRate = N
-                    }
-                    setTimeout(func, "2000", func);
-                } else {
+            for (let index in v_s) {
+                index = Number(index);
+                let value = v_s[index];
+                if (value['status'] === false) {
+                    setTimeout(Video_Ctrl, '2000', v_s, t_s);
+                    return;
+                } else if (value['status'] === true && v_s.length === index + 1) {
                     GotoNextPage();
                 }
-            } else {
-                setTimeout(func, "2000", func);
+                else{
+                    ;
+                }
             }
-        }
-        if (A.length == B.length) {
-            video_ctrl(Video);
         } else {
-            B = [];
-            for (let d = 0; d < A.length; d++) {
-                B[d] = false;
-                A[d].addEventListener("ended", function () {
-                    B[d] = true;
-                }, true);
-            }
-            video_ctrl(video_ctrl);
+            setTimeout(Video, '2000');
+            return;
         }
+    }
+
+    function Title_Listen() {
+        var title = $('div[class="course-title small"]');
+        if (title.length === 0) {
+            setTimeout(Title_Listen, '500');
+            return;
+        }
+        var observerOptions = {
+            childList: true,
+            attributes: true,
+            subtree: true
+        }
+        var observer = new MutationObserver(function () {
+            timestamp = Date.parse(new Date());
+        });
+        observer.observe(title[0], observerOptions)
     }
 
     function GotoNextPage() {
@@ -525,6 +567,7 @@
         Init();
         Video();
         CheckModal();
+        Title_Listen();
     }
 
     var autoAnswering = false;
@@ -544,6 +587,7 @@
     var autoAnswerJudgesOp;
     var autoAnswerFillsOp;
     var pageid = '';
+    var timestamp = 0;
 
     setInterval(function () { unsafeWindow.document.dispatchEvent(new Event('mousemove')) }, 1000);
 
