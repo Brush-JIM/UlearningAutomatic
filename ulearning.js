@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.6.2
+// @version      1.6.3
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
@@ -14,7 +14,7 @@
 (function () {
     'use strict';
     /*  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.6.1由EliotZhang @ 2020/06/04 最后更新
+     *  优学院自动静音播放、自动做练习题、自动翻页、修改播放速率脚本v1.6.3由BrushJIM @ 2020/09/13 最后更新
      *  特别感谢Brush-JIM (Mail:Brush-JIM@protonmail.com) 提供的脚本改进支持！
      *  使用修改播放速率功能请谨慎！！！产生的不良后果恕某概不承担！！！
      *  请保持网课播放页面在浏览器中活动，避免长时间后台挂机（平台有挂机检测功能），以减少不必要的损失
@@ -51,8 +51,8 @@
             }, '3000');
             return;
         }
-        var videos = $('video');
-        var videos_status = $('div[class="video-bottom"]');
+        var videos = $('mediaelementwrapper video:first-child');
+        var videos_status = $('.video-bottom span:first-child');
         if (videos.length === 0) {
             GotoNextPage();
             return;
@@ -60,122 +60,68 @@
         var v_s = [];
         if (videos.length === videos_status.length) {
             $(videos).each(function (index, value) {
-                let state = $('span', $('div[class="video-bottom"]')[index]).attr('data-bind');
+                let state = $(videos_status[index]).attr('data-bind');
                 if (state === 'text: $root.i18nMessageText().finished') {
                     v_s.push({
                         'ele': value,
-                        'status': true
+                        'status': true,
+                        'seek': 0
                     });
                 } else if (state === 'text: $root.i18nMessageText().viewed' || state === 'text: $root.i18nMessageText().unviewed') {
                     v_s.push({
                         'ele': value,
-                        'status': false
+                        'status': false,
+                        'seek': 0
                     });
                 } else {
                     v_s.push({
                         'ele': value,
-                        'status': null
+                        'status': null,
+                        'seek': 0
                     });
                 }
             })
         } else {
-            $(videos).each(function (index, value) {
-                v_s.push({
-                    'ele': value,
-                    'status': false
-                })
-            });
+            GotoNextPage();
+            return;
         }
         $(v_s).each(function (index, value) {
             value['ele'].addEventListener("ended", function () {
                 v_s[index]['status'] = true;
             }, true);
         })
-        timestamp = Date.parse(new Date());
-        Video_Ctrl(v_s, timestamp);
+        VideoCtrl(v_s);
     }
 
-    function Video_Ctrl(v_s, t_s) {
-        if (timestamp === t_s) {
-            for (let index in v_s) {
-                index = Number(index);
-                let value = v_s[index];
-                if (value['status'] === false) {
-                    if (index - 1 > 0) {
-                        if (v_s[index - 1]['ele'].currentTime !== 0) {
-                            if (v_s[index - 1]['ele'].paused === true) {
-                                let playPromise = v_s[index - 1]['ele'].play();
-                                if (playPromise !== undefined) {
-                                    playPromise.then(function () {
-                                        ;
-                                    }).catch(function (error) {
-                                        v_s[index - 1]['status'] = true;
-                                    })
-                                }
-                            }
-                            if (EnableAutoMute && v_s[index - 1]['ele'].muted === false) {
-                                v_s[index - 1]['ele'].muted = true;
-                            }
-                            if (EnableAutoChangeRate && v_s[index - 1]['ele'].playbackRate != N) {
-                                v_s[index - 1]['ele'].playbackRate = N;
-                            }
-                        }
-                        break;
-                    } else {
-                        if (value['ele'].paused === true) {
-                            let playPromise = value['ele'].play();
-                            if (playPromise !== undefined) {
-                                playPromise.then(function () {
-                                    ;
-                                }).catch(function (error) {
-                                    v_s[index]['status'] = true;
-                                })
-                            }
-                        }
-                        if (EnableAutoMute && value['ele'].muted === false) {
-                            value['ele'].muted = true;
-                        }
-                        if (EnableAutoChangeRate && value['ele'].playbackRate != N) {
-                            value['ele'].playbackRate = N;
-                        }
-                    }
-                    break;
-                }
-            }
-            for (let index in v_s) {
-                index = Number(index);
-                let value = v_s[index];
-                if (value['status'] === false) {
-                    setTimeout(Video_Ctrl, '2000', v_s, t_s);
-                    return;
-                } else if (value['status'] === true && v_s.length === index + 1) {
-                    GotoNextPage();
-                }
-                else{
-                    ;
-                }
-            }
-        } else {
-            setTimeout(Video, '2000');
+    function VideoCtrl(v_s){
+        if (v_s.length !== $('mediaelementwrapper video:first-child').length){
+            Video();
             return;
         }
-    }
-
-    function Title_Listen() {
-        var title = $('div[class="course-title small"]');
-        if (title.length === 0) {
-            setTimeout(Title_Listen, '500');
-            return;
+        for(let z = 0; z < v_s.length; z++){
+            if(v_s[z].ele !== $('mediaelementwrapper video:first-child')[z]){
+                Video();
+                return;
+            }
+            let edit_video = undefined;
+            if(v_s[z].status === false){
+                edit_video = (z !== 0 && v_s[z - 1].status === false)? v_s[z - 1]: v_s[z];
+                if(edit_video.ele.paused === true || v_s[z].seek === edit_video.ele.currentTime){
+                    edit_video.ele.currentTime = edit_video.ele.currentTime - 3;
+                    edit_video.ele.play();
+                }
+                edit_video.seek = edit_video.ele.currentTime;
+                if(EnableAutoMute && edit_video.ele.muted === false){
+                    edit_video.ele.muted = true;
+                }
+                if(EnableAutoChangeRate && edit_video.ele.playbackRate != N){
+                    edit_video.ele.playbackRate = N;
+                }
+                setTimeout(VideoCtrl, 500, v_s);
+                return;
+            }
         }
-        var observerOptions = {
-            childList: true,
-            attributes: true,
-            subtree: true
-        }
-        var observer = new MutationObserver(function () {
-            timestamp = Date.parse(new Date());
-        });
-        observer.observe(title[0], observerOptions)
+        GotoNextPage();
     }
 
     function GotoNextPage() {
@@ -466,7 +412,7 @@
         var panel = document.createElement('div');
         root.appendChild(panel);
         panel.setAttribute('class', 'OptionPanel');
-        panel.innerHTML = "<div class='OptionPanel'><div class='DragBall'>UL</div><div class='MainPanel'><h2 class='OptionMainTitle'>优学院辅助脚本</br>by EliotZhang、BrushJIM</h2><button id='MainBtn'>隐藏设置</button><h4>视频播放</h4><ul class='OptionUL'><li>自动翻页、播放视频?<input class='OptionInput'id='AutoPlay'type='checkbox'checked='checked'></li><li>自动静音?<input class='OptionInput'id='AutoMute'type='checkbox'checked='checked'></li><li>自动调整速率(依赖自动播放视频功能)?<input class='OptionInput'id='AutoPlayRate'type='checkbox'checked='checked'></li><li>自动的速率速度<input class='OptionInput'id='AutoPlayRateChange'type='number'value='1.50'step='0.25'min='0.25'max='15.00'></li></ul><h4>自动作答</h4><ul class='OptionUL'><li>自动作答(总开关)?<input class='OptionInput'id='AutoAnswer'type='checkbox'checked='checked'></li><li>自动显示答案?<input class='OptionInput'id='AutoShowAnswer'type='checkbox'checked='checked'></li><li>自动作答选择题?<input class='OptionInput'id='AutoAnswerChoices'type='checkbox'checked='checked'></li><li>自动作答判断题?<input class='OptionInput'id='AutoAnswerJudges'type='checkbox'checked='checked'></li><li>自动作答填空、简答题?<input class='OptionInput'id='AutoAnswerFills'type='checkbox'checked='checked'></li></ul><button id='SaveOpBtn'>保存设置并刷新脚本</button><p style='color:hotpink;'>若<strong>关闭自动翻页功能</strong>导致<strong>自动作答系列功能失效</strong>请点击<strong>保存设置并刷新脚本按钮！</strong></p><p style='color:hotpink;'>若关闭自动翻页功能答完题后请<strong>手动提交！！</strong></p></div></div>";
+        panel.innerHTML = "<div class='OptionPanel'><div class='DragBall'>UL</div><div class='MainPanel'><h2 class='OptionMainTitle'>优学院辅助脚本</br>by EliotZhang、BrushJIM</h2><button id='MainBtn'>隐藏设置</button><h4>视频播放</h4><p style='color:hotpink'>由于优学院视频<strong>问题</strong>，可能会出现<strong>无法正常播放</strong>，此时脚本会<strong>后退3秒重新播放</strong>，可能要<strong>重复多次！</strong></p><ul class='OptionUL'><li>自动翻页、播放视频?<input class='OptionInput'id='AutoPlay'type='checkbox'checked='checked'></li><li>自动静音?<input class='OptionInput'id='AutoMute'type='checkbox'checked='checked'></li><li>自动调整速率(依赖自动播放视频功能)?<input class='OptionInput'id='AutoPlayRate'type='checkbox'checked='checked'></li><li>自动的速率速度<input class='OptionInput'id='AutoPlayRateChange'type='number'value='1.50'step='0.25'min='0.25'max='15.00'></li></ul><h4>自动作答</h4><ul class='OptionUL'><li>自动作答(总开关)?<input class='OptionInput'id='AutoAnswer'type='checkbox'checked='checked'></li><li>自动显示答案?<input class='OptionInput'id='AutoShowAnswer'type='checkbox'checked='checked'></li><li>自动作答选择题?<input class='OptionInput'id='AutoAnswerChoices'type='checkbox'checked='checked'></li><li>自动作答判断题?<input class='OptionInput'id='AutoAnswerJudges'type='checkbox'checked='checked'></li><li>自动作答填空、简答题?<input class='OptionInput'id='AutoAnswerFills'type='checkbox'checked='checked'></li></ul><button id='SaveOpBtn'>保存设置并刷新脚本</button><p style='color:hotpink;'>若<strong>关闭自动翻页功能</strong>导致<strong>自动作答系列功能失效</strong>请点击<strong>保存设置并刷新脚本按钮！</strong></p><p style='color:hotpink;'>若关闭自动翻页功能答完题后请<strong>手动提交！！</strong></p></div></div>";
     }
 
     function Init() {
@@ -567,7 +513,6 @@
         Init();
         Video();
         CheckModal();
-        Title_Listen();
     }
 
     var autoAnswering = false;
@@ -587,7 +532,6 @@
     var autoAnswerJudgesOp;
     var autoAnswerFillsOp;
     var pageid = '';
-    var timestamp = 0;
 
     setInterval(function () { unsafeWindow.document.dispatchEvent(new Event('mousemove')) }, 1000);
 
