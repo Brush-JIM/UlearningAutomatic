@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率（改）
+// @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.6.5
+// @version      1.6.6
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
