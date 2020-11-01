@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率
+// @name         优学院自动静音播放、自动做练习题、自动翻页、修改播放速率（改）
 // @namespace    [url=mailto:moriartylimitter@outlook.com]moriartylimitter@outlook.com[/url]
-// @version      1.6.4
+// @version      1.6.5
 // @description  自动静音播放每页视频、自动作答、修改播放速率!
 // @author       EliotZhang、Brush-JIM
 // @match        *://*.ulearning.cn/learnCourse/*
@@ -532,6 +532,10 @@
     var autoAnswerJudgesOp;
     var autoAnswerFillsOp;
     var pageid = '';
+
+    unsafeWindow.navigator.__defineGetter__("userAgent", function () {
+        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36";
+    });
 
     setInterval(function () { unsafeWindow.document.dispatchEvent(new Event('mousemove')) }, 1000);
 
